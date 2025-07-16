@@ -1,7 +1,11 @@
+from __future__ import annotations
+
 from datetime import datetime
 from typing import List, Optional
+
 from pydantic import BaseModel
 
+# --- Básicos ---
 class UserSchema(BaseModel):
     alias: str
     name: str
@@ -10,10 +14,10 @@ class UserSchema(BaseModel):
 
 class RideParticipationSchema(BaseModel):
     confirmation: Optional[datetime] = None
-    destination: str = ""
-    occupiedSpaces: int = 0
-    status: str = "waiting"
-    participant_alias: str = ""
+    destination: str
+    occupiedSpaces: int
+    status: str                 # str para serializar Enum
+    participant: UserSchema | None = None  # completo en GET detalle
 
 class RideSchema(BaseModel):
     id: int
@@ -21,5 +25,5 @@ class RideSchema(BaseModel):
     finalAddress: str
     allowedSpaces: int
     rideDriver: str
-    status: str = "ready"
-    participants: List[RideParticipationSchema] = [] 
+    status: str
+    participants: List[RideParticipationSchema] = []

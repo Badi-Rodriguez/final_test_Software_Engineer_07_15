@@ -15,7 +15,7 @@ class User:
         total = len(self.rides)
         completed = sum(rp.status == "done" for rp in self.rides)
         missing = sum(rp.status == "missing" for rp in self.rides)
-        not_marked = sum(rp.status == "not-marked" for rp in self.rides)
+        not_marked = sum(rp.status == "notmarked" for rp in self.rides)
         rejected = sum(rp.status == "rejected" for rp in self.rides)
         return {
             "previousRidesTotal": total,

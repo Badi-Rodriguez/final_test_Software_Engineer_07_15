@@ -1,75 +1,62 @@
+# tests/test_core.py
 from datetime import datetime
-from src.models.user import User
-from src.models.ride import Ride
-from src.models.ride_participation import RideParticipation
 
-# Success: User stats with one completed ride
-def test_user_stats_success():
-    user = User(alias="testuser", name="Test User", carPlate="ABC123")
-    participation = RideParticipation(
-        confirmation=datetime.now(),
-        destination="123 Main St",
-        occupiedSpaces=1,
-        status="done",
-        participant_alias="testuser"
-    )
-    user.rides.append(participation)
-    stats = user.get_ride_stats()
+from src.models.ride import Ride, RideStatus
+from src.models.ride_participation import RideParticipation, RPStatus
+from src.models.user import User
+
+# ---------- ÉXITO ----------
+def test_stats_success():
+    """Se contabiliza correctamente un ride completado."""
+    u = User(alias="a", name="A")
+    rp = RideParticipation(participant_alias="a",
+                           destination="X", occupied_spaces=1,
+                           status=RPStatus.done)
+    u.rides.append(rp)
+    stats = u.get_ride_stats()
     assert stats["previousRidesCompleted"] == 1
     assert stats["previousRidesTotal"] == 1
 
-# Error: No available spaces for new participant
-def test_ride_no_available_spaces():
-    ride = Ride(
-        id=1,
-        ride_date_and_time=datetime.now(),
-        final_address="123 Main St",
-        allowed_spaces=1,
-        ride_driver="testuser",
-        status="ready",
-        participants=[
-            RideParticipation(
-                confirmation=None,
-                destination="123 Main St",
-                occupiedSpaces=1,
-                status="confirmed",
-                participant_alias="p1"
-            )
-        ]
-    )
-    occupied = sum(p.occupiedSpaces for p in ride.participants if p.status in ("confirmed", "waiting"))
-    assert occupied >= ride.allowed_spaces
+# ---------- ERRORES ----------
+def test_duplicate_request_error():
+    """No se permite hacer dos solicitudes al mismo ride."""
+    ride = Ride(id=1, ride_date_and_time=datetime.now(),
+                final_address="X", allowed_spaces=2,
+                ride_driver="drv")
+    rp1 = RideParticipation(participant_alias="p",
+                            destination="X", occupied_spaces=1)
+    ride.request_join(rp1)
+    rp2 = RideParticipation(participant_alias="p",
+                            destination="X", occupied_spaces=1)
+    try:
+        ride.request_join(rp2)
+        assert False, "Se aceptó solicitud duplicada"
+    except ValueError as e:
+        assert "Duplicate request" in str(e)
 
-# Error: Duplicate participation request
-def test_duplicate_participation():
-    ride = Ride(
-        id=1,
-        ride_date_and_time=datetime.now(),
-        final_address="123 Main St",
-        allowed_spaces=2,
-        ride_driver="testuser",
-        status="ready",
-        participants=[
-            RideParticipation(
-                confirmation=None,
-                destination="123 Main St",
-                occupiedSpaces=1,
-                status="waiting",
-                participant_alias="testuser"
-            )
-        ]
-    )
-    duplicate = any(p.participant_alias == "testuser" for p in ride.participants)
-    assert duplicate
+def test_no_space_error():
+    """No se acepta un participante si no hay asientos."""
+    ride = Ride(id=2, ride_date_and_time=datetime.now(),
+                final_address="X", allowed_spaces=1,
+                ride_driver="drv")
+    ride.request_join(RideParticipation(participant_alias="p1",
+                                        destination="X",
+                                        occupied_spaces=1))
+    rp2 = RideParticipation(participant_alias="p2",
+                            destination="X", occupied_spaces=1)
+    try:
+        ride.request_join(rp2)
+        assert False
+    except ValueError as e:
+        assert "Not enough free spaces" in str(e)
 
-# Error: Unload participant not in 'inprogress' status
-def test_invalid_status_transition():
-    part = RideParticipation(
-        confirmation=None,
-        destination="123 Main St",
-        occupiedSpaces=1,
-        status="waiting",
-        participant_alias="testuser"
-    )
-    can_unload = part.status == "inprogress"
-    assert not can_unload 
+def test_unload_status_error():
+    """Solo se puede descargar si está inprogress."""
+    rp = RideParticipation(participant_alias="p",
+                           destination="X", occupied_spaces=1,
+                           status=RPStatus.confirmed)
+    try:
+        rp.mark_unloaded()
+        assert False
+    except ValueError as e:
+        assert "inprogress" in str(e)
