@@ -1,3 +1,5 @@
+# tests/test_ride_participation.py
+# Pruebas unitarias para la clase RideParticipation: creación, validación de campos y casos de error.
 import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))

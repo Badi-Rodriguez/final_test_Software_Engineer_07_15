@@ -1,3 +1,5 @@
+# tests/test_ride.py
+# Pruebas unitarias para la clase Ride: métodos, propiedades y validaciones de negocio (incluyendo errores y transiciones de estado).
 import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))

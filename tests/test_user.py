@@ -1,3 +1,5 @@
+# tests/test_user.py
+# Pruebas unitarias para la clase User: creación, estadísticas y casos de error.
 import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
