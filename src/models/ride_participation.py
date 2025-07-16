@@ -20,7 +20,7 @@ class RPStatus(str, Enum):
 class RideParticipation(BaseModel):
     participant_alias: str                     # solo guardamos el alias
     destination: str
-    occupied_spaces: int = Field(..., gt=0)
+    occupied_spaces: int = Field(..., gt=-1)
     confirmation: Optional[datetime] = None
     status: RPStatus = RPStatus.waiting
 
